@@ -29,7 +29,7 @@ async function obtenerPiloto(req, res) {
 
 async function crearPiloto(req, res) {
   try {
-    const { usuarioId, nombre, licencia, vencimientoLicencia } = req.body;
+    const { usuarioId, nombre, licencia, vencimientoLicencia } = req.body || {};
 
     if (!usuarioId || !nombre || !licencia || !vencimientoLicencia) {
       return res.status(400).json({

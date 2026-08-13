@@ -7,6 +7,8 @@ const { authenticate, checkRole } = require('./middlewares/auth.middleware');
 const pilotoRoutes = require('./routes/piloto.routes');
 const app = express();
 const vueloRoutes = require('./routes/vuelo.routes');
+const reporteRoutes = require('./routes/reporte.routes');
+
 
 app.use(cors());
 app.use(express.json());
@@ -23,6 +25,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/uavs', uavRoutes);
 app.use('/api/v1/pilotos', pilotoRoutes);
 app.use('/api/v1/vuelos', vueloRoutes);
+app.use('/api/v1/reportes', reporteRoutes);
 
 const PORT = process.env.PORT || 4000;
 

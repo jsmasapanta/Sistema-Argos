@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  admin
+  operador
+  piloto
+}
+
+enum EstadoUAV {
+  operativo
+  en_mantenimiento
+  de_baja
+}
+
+model Usuario {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  rol          Rol
+  activo       Boolean  @default(true)
+  creadoEn     DateTime @default(now()) @map("creado_en")
+
+  piloto Piloto?
+
+  @@map("usuarios")
+}
+
+model Piloto {
+  id                  String    @id @default(uuid())
+  usuarioId           String    @unique @map("usuario_id")
+  usuario             Usuario   @relation(fields: [usuarioId], references: [id])
+  nombre              String
+  licencia            String
+  vencimientoLicencia DateTime  @map("vencimiento_licencia")
+  vuelos              Vuelo[]
+
+  @@map("pilotos")
+}
+
+model UAV {
+  id            String          @id @default(uuid())
+  codigo        String          @unique
+  modelo        String
+  estado        EstadoUAV       @default(operativo)
+  horasTotales  Int             @default(0) @map("horas_totales")
+  vuelos        Vuelo[]
+  mantenimientos Mantenimiento[]
+
+  @@map("uavs")
+}
+
+model Vuelo {
+  id           String   @id @default(uuid())
+  pilotoId     String   @map("piloto_id")
+  piloto       Piloto   @relation(fields: [pilotoId], references: [id])
+  uavId        String   @map("uav_id")
+  uav          UAV      @relation(fields: [uavId], references: [id])
+  fechaInicio  DateTime @map("fecha_inicio")
+  fechaFin     DateTime @map("fecha_fin")
+  novedades    String?
+
+  @@map("vuelos")
+}
+
+model Mantenimiento {
+  id          String   @id @default(uuid())
+  uavId       String   @map("uav_id")
+  uav         UAV      @relation(fields: [uavId], references: [id])
+  fecha       DateTime
+  tipo        String
+  descripcion String?
+
+  @@map("mantenimientos")
+}

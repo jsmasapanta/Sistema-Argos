@@ -1,0 +1,35 @@
+# Dependencias (aplica a backend y frontend)
+node_modules/
+**/node_modules/
+
+# Variables de entorno reales
+.env
+**/.env
+!.env.example
+
+# Build de producción
+dist/
+build/
+**/dist/
+**/build/
+
+# Prisma generado
+argos-backend/src/generated/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo / editor
+.DS_Store
+Thumbs.db
+
+# Archivos de skills generados automáticamente por Prisma (no es código del proyecto)
+.claude/
+.agents/
+.windsurf/
+skills-lock.json
+**/.claude/
+**/.agents/
+**/.windsurf/
+**/skills-lock.json

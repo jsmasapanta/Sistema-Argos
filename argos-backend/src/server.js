@@ -4,7 +4,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth.routes');
 const uavRoutes = require('./routes/uav.routes');
 const { authenticate, checkRole } = require('./middlewares/auth.middleware');
-
+const pilotoRoutes = require('./routes/piloto.routes');
 const app = express();
 
 app.use(cors());
@@ -20,6 +20,7 @@ app.get('/api/v1/solo-admin', authenticate, checkRole('admin'), (req, res) => {
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/uavs', uavRoutes);
+app.use('/api/v1/pilotos', pilotoRoutes);
 
 const PORT = process.env.PORT || 4000;
 

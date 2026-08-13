@@ -1,0 +1,103 @@
+const prisma = require('../config/prisma');
+
+async function listarPilotos(req, res) {
+  try {
+    const pilotos = await prisma.piloto.findMany({
+      include: { usuario: { select: { email: true } } },
+      orderBy: { nombre: 'asc' },
+    });
+    res.json(pilotos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al listar pilotos' });
+  }
+}
+
+async function obtenerPiloto(req, res) {
+  try {
+    const piloto = await prisma.piloto.findUnique({
+      where: { id: req.params.id },
+      include: { usuario: { select: { email: true } }, vuelos: true },
+    });
+    if (!piloto) return res.status(404).json({ error: 'Piloto no encontrado' });
+    res.json(piloto);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener piloto' });
+  }
+}
+
+async function crearPiloto(req, res) {
+  try {
+    const { usuarioId, nombre, licencia, vencimientoLicencia } = req.body;
+
+    if (!usuarioId || !nombre || !licencia || !vencimientoLicencia) {
+      return res.status(400).json({
+        error: 'usuarioId, nombre, licencia y vencimientoLicencia son requeridos',
+      });
+    }
+
+    const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+    if (!usuario) {
+      return res.status(404).json({ error: 'El usuario indicado no existe' });
+    }
+    if (usuario.rol !== 'piloto') {
+      return res.status(400).json({ error: 'El usuario debe tener rol "piloto"' });
+    }
+
+    const piloto = await prisma.piloto.create({
+      data: {
+        usuarioId,
+        nombre,
+        licencia,
+        vencimientoLicencia: new Date(vencimientoLicencia),
+      },
+    });
+
+    res.status(201).json(piloto);
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'Este usuario ya tiene un perfil de piloto' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al crear piloto' });
+  }
+}
+
+async function actualizarPiloto(req, res) {
+  try {
+    const { nombre, licencia, vencimientoLicencia } = req.body;
+
+    const piloto = await prisma.piloto.update({
+      where: { id: req.params.id },
+      data: {
+        nombre,
+        licencia,
+        vencimientoLicencia: vencimientoLicencia ? new Date(vencimientoLicencia) : undefined,
+      },
+    });
+
+    res.json(piloto);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Piloto no encontrado' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar piloto' });
+  }
+}
+
+async function eliminarPiloto(req, res) {
+  try {
+    await prisma.piloto.delete({ where: { id: req.params.id } });
+    res.status(204).send();
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Piloto no encontrado' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al eliminar piloto' });
+  }
+}
+
+module.exports = { listarPilotos, obtenerPiloto, crearPiloto, actualizarPiloto, eliminarPiloto };

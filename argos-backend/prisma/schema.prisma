@@ -39,6 +39,7 @@ model Piloto {
   nombre              String
   licencia            String
   vencimientoLicencia DateTime  @map("vencimiento_licencia")
+  fotoUrl             String?   @map("foto_url")
   vuelos              Vuelo[]
 
   @@map("pilotos")
@@ -50,6 +51,7 @@ model UAV {
   modelo        String
   estado        EstadoUAV       @default(operativo)
   horasTotales  Int             @default(0) @map("horas_totales")
+  fotoUrl       String?         @map("foto_url")
   vuelos        Vuelo[]
   mantenimientos Mantenimiento[]
 

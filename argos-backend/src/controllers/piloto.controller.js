@@ -100,4 +100,28 @@ async function eliminarPiloto(req, res) {
   }
 }
 
-module.exports = { listarPilotos, obtenerPiloto, crearPiloto, actualizarPiloto, eliminarPiloto };
+async function subirFotoPiloto(req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se recibió ninguna imagen' });
+    }
+
+    const fotoUrl = `/uploads/pilotos/${req.file.filename}`;
+
+    const piloto = await prisma.piloto.update({
+      where: { id: req.params.id },
+      data: { fotoUrl },
+    });
+
+    res.json(piloto);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Piloto no encontrado' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al subir la foto del piloto' });
+  }
+}
+
+
+module.exports = { listarPilotos, obtenerPiloto, crearPiloto, actualizarPiloto, eliminarPiloto, subirFotoPiloto };

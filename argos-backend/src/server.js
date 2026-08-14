@@ -8,10 +8,11 @@ const pilotoRoutes = require('./routes/piloto.routes');
 const app = express();
 const vueloRoutes = require('./routes/vuelo.routes');
 const reporteRoutes = require('./routes/reporte.routes');
-
+const path = require('path');
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok', mensaje: 'ARGOS API funcionando' });

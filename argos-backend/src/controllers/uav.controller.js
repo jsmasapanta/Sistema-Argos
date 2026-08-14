@@ -75,4 +75,28 @@ async function eliminarUAV(req, res) {
   }
 }
 
-module.exports = { listarUAVs, obtenerUAV, crearUAV, actualizarUAV, eliminarUAV };
+async function subirFotoUAV(req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se recibió ninguna imagen' });
+    }
+
+    const fotoUrl = `/uploads/uavs/${req.file.filename}`;
+
+    const uav = await prisma.uAV.update({
+      where: { id: req.params.id },
+      data: { fotoUrl },
+    });
+
+    res.json(uav);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'UAV no encontrado' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al subir la foto del UAV' });
+  }
+}
+
+
+module.exports = { listarUAVs, obtenerUAV, crearUAV, actualizarUAV, eliminarUAV, subirFotoUAV };

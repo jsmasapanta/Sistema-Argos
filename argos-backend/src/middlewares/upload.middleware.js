@@ -16,7 +16,7 @@ function crearUpload(carpeta) {
     storage,
     limits: { fileSize: 5 * 1024 * 1024 }, // máximo 5 MB
     fileFilter: (req, file, cb) => {
-      const tiposValidos = /jpeg|jpg|png|webp/;
+      const tiposValidos = /jpeg|jpg|png|webp|avif/;
       const extensionValida = tiposValidos.test(path.extname(file.originalname).toLowerCase());
       if (extensionValida) {
         cb(null, true);

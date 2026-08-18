@@ -10,6 +10,7 @@ const vueloRoutes = require('./routes/vuelo.routes');
 const reporteRoutes = require('./routes/reporte.routes');
 const path = require('path');
 const mantenimientoRoutes = require('./routes/mantenimiento.routes');
+const exportarRoutes = require('./routes/exportar.routes'); 
 
 app.use(cors());
 app.use(express.json());
@@ -29,6 +30,7 @@ app.use('/api/v1/pilotos', pilotoRoutes);
 app.use('/api/v1/vuelos', vueloRoutes);
 app.use('/api/v1/reportes', reporteRoutes);
 app.use('/api/v1/mantenimientos', mantenimientoRoutes);
+app.use('/api/v1/reportes/exportar', exportarRoutes);
 
 const PORT = process.env.PORT || 4000;
 

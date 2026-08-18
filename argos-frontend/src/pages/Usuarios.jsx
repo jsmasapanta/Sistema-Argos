@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { listarUsuarios, registrarUsuario, cambiarEstadoUsuario } from '../api/usuarios';
+import { listarUsuarios, registrarUsuario, cambiarEstadoUsuario, cambiarRolUsuario } from '../api/usuarios';
 import FormularioUsuario from '../components/FormularioUsuario';
 import ToastExito from '../components/ToastExito';
 
@@ -36,6 +36,28 @@ export default function Usuarios() {
       alert(error.response?.data?.error || 'Error al actualizar el usuario');
     },
   });
+
+  const rolMutation = useMutation({
+    mutationFn: ({ id, rol }) => cambiarRolUsuario(id, rol),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      setToast('Rol actualizado');
+      setTimeout(() => setToast(''), 3000);
+    },
+    onError: (error) => {
+      alert(error.response?.data?.error || 'Error al actualizar el rol');
+    },
+  });
+
+  function handleCambiarRol(usuario, nuevoRol) {
+    if (nuevoRol === usuario.rol) return;
+    const confirmar = window.confirm(
+      `¿Cambiar el rol de ${usuario.email} de "${usuario.rol}" a "${nuevoRol}"?\n\nSi este usuario tiene un perfil de piloto, no se eliminará automáticamente.`
+    );
+    if (confirmar) {
+      rolMutation.mutate({ id: usuario.id, rol: nuevoRol });
+    }
+  }
 
   const colorRol = {
     admin: 'bg-slate-900 text-white',
@@ -95,9 +117,16 @@ export default function Usuarios() {
                   <tr key={u.id}>
                     <td className="px-4 py-3 text-slate-900">{u.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${colorRol[u.rol]}`}>
-                        {u.rol}
-                      </span>
+                      <select
+                        value={u.rol}
+                        onChange={(e) => handleCambiarRol(u, e.target.value)}
+                        disabled={rolMutation.isPending}
+                        className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${colorRol[u.rol]}`}
+                      >
+                        <option value="admin">admin</option>
+                        <option value="operador">operador</option>
+                        <option value="piloto">piloto</option>
+                      </select>
                     </td>
                     <td className="px-4 py-3">
                       <span

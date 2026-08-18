@@ -101,4 +101,29 @@ router.put('/usuarios/:id/estado', authenticate, checkRole('admin'), async (req,
   }
 });
 
+router.put('/usuarios/:id/rol', authenticate, checkRole('admin'), async (req, res) => {
+  try {
+    const { rol } = req.body || {};
+    const rolesValidos = ['admin', 'operador', 'piloto'];
+
+    if (!rolesValidos.includes(rol)) {
+      return res.status(400).json({ error: 'Rol inválido. Debe ser admin, operador o piloto' });
+    }
+
+    const usuario = await prisma.usuario.update({
+      where: { id: req.params.id },
+      data: { rol },
+      select: { id: true, email: true, rol: true, activo: true },
+    });
+
+    res.json(usuario);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar el rol del usuario' });
+  }
+});
+
 module.exports = router;

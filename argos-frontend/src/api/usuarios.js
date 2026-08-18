@@ -14,3 +14,8 @@ export async function cambiarEstadoUsuario(id, activo) {
   const { data } = await apiClient.put(`/auth/usuarios/${id}/estado`, { activo });
   return data;
 }
+
+export async function cambiarRolUsuario(id, rol) {
+  const { data } = await apiClient.put(`/auth/usuarios/${id}/rol`, { rol });
+  return data;
+}

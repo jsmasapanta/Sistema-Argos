@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { listarPilotos, crearPiloto, actualizarPiloto, subirFotoPiloto } from '../api/pilotos';
+import { listarPilotos, crearPiloto, actualizarPiloto, eliminarPiloto, subirFotoPiloto } from '../api/pilotos';
 import { urlFoto } from '../api/config';
 import FormularioPiloto from '../components/FormularioPiloto';
+import ConfirmarAccion from '../components/ConfirmarAccion';
+import ToastExito from '../components/ToastExito';
 
 export default function Pilotos() {
   const [mostrarForm, setMostrarForm] = useState(false);
   const [pilotoEditando, setPilotoEditando] = useState(null);
+  const [pilotoParaEliminar, setPilotoParaEliminar] = useState(null);
+  const [toast, setToast] = useState('');
   const queryClient = useQueryClient();
 
   const { data: pilotos, isLoading, isError } = useQuery({
@@ -27,9 +31,25 @@ export default function Pilotos() {
       queryClient.invalidateQueries({ queryKey: ['pilotos'] });
       setMostrarForm(false);
       setPilotoEditando(null);
+      setToast('Piloto guardado correctamente');
+      setTimeout(() => setToast(''), 3000);
     },
     onError: (error) => {
       console.error('Error al guardar piloto:', error);
+    },
+  });
+
+  const eliminarMutation = useMutation({
+    mutationFn: eliminarPiloto,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pilotos'] });
+      setPilotoParaEliminar(null);
+      setToast('Piloto eliminado');
+      setTimeout(() => setToast(''), 3000);
+    },
+    onError: (error) => {
+      alert(error.response?.data?.error || 'Error al eliminar el piloto');
+      setPilotoParaEliminar(null);
     },
   });
 
@@ -88,23 +108,31 @@ export default function Pilotos() {
             {pilotos.map((piloto) => (
               <div
                 key={piloto.id}
-                onClick={() => abrirEdicion(piloto)}
-                className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex items-center gap-4 cursor-pointer hover:shadow-md transition"
+                className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition"
               >
-                <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                <div
+                  onClick={() => abrirEdicion(piloto)}
+                  className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer"
+                >
                   {piloto.fotoUrl ? (
                     <img src={urlFoto(piloto.fotoUrl)} alt={piloto.nombre} className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-slate-400 text-xs">Sin foto</span>
                   )}
                 </div>
-                <div>
+                <div className="flex-1 cursor-pointer" onClick={() => abrirEdicion(piloto)}>
                   <h3 className="font-semibold text-slate-900">{piloto.nombre}</h3>
                   <p className="text-sm text-slate-500">{piloto.licencia}</p>
                   <p className="text-xs text-slate-400 mt-1">
                     Vence: {new Date(piloto.vencimientoLicencia).toLocaleDateString('es-EC')}
                   </p>
                 </div>
+                <button
+                  onClick={() => setPilotoParaEliminar(piloto)}
+                  className="text-sm text-slate-400 hover:text-red-700 transition self-start"
+                >
+                  Eliminar
+                </button>
               </div>
             ))}
 
@@ -113,6 +141,16 @@ export default function Pilotos() {
             )}
           </div>
         )}
+
+        {pilotoParaEliminar && (
+          <ConfirmarAccion
+            mensaje={`¿Eliminar a ${pilotoParaEliminar.nombre}? Esta acción no se puede deshacer.`}
+            onConfirmar={() => eliminarMutation.mutate(pilotoParaEliminar.id)}
+            onCancelar={() => setPilotoParaEliminar(null)}
+          />
+        )}
+
+        <ToastExito mensaje={toast} visible={!!toast} />
       </main>
     </div>
   );

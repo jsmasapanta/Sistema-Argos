@@ -95,6 +95,11 @@ async function eliminarPiloto(req, res) {
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'Piloto no encontrado' });
     }
+    if (error.code === 'P2003') {
+      return res.status(409).json({
+        error: 'No se puede eliminar: este piloto tiene vuelos registrados en su historial.',
+      });
+    }
     console.error(error);
     res.status(500).json({ error: 'Error al eliminar piloto' });
   }

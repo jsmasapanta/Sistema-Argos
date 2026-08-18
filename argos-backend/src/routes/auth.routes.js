@@ -41,6 +41,10 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
+    if (!usuario.activo) {
+      return res.status(403).json({ error: 'Esta cuenta ha sido desactivada. Contacta a un administrador.' });
+    }
+
     const passwordValido = await bcrypt.compare(password, usuario.passwordHash);
 
     if (!passwordValido) {
@@ -70,6 +74,30 @@ router.get('/usuarios', authenticate, checkRole('admin'), async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al listar usuarios' });
+  }
+});
+
+router.put('/usuarios/:id/estado', authenticate, checkRole('admin'), async (req, res) => {
+  try {
+    const { activo } = req.body || {};
+
+    if (typeof activo !== 'boolean') {
+      return res.status(400).json({ error: 'El campo activo debe ser true o false' });
+    }
+
+    const usuario = await prisma.usuario.update({
+      where: { id: req.params.id },
+      data: { activo },
+      select: { id: true, email: true, rol: true, activo: true },
+    });
+
+    res.json(usuario);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar el estado del usuario' });
   }
 });
 

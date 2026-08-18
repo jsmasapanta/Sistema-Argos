@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { listarUsuarios, registrarUsuario } from '../api/usuarios';
+import { listarUsuarios, registrarUsuario, cambiarEstadoUsuario } from '../api/usuarios';
 import FormularioUsuario from '../components/FormularioUsuario';
+import ToastExito from '../components/ToastExito';
 
 export default function Usuarios() {
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [toast, setToast] = useState('');
   const queryClient = useQueryClient();
 
   const { data: usuarios, isLoading, isError } = useQuery({
@@ -18,6 +20,20 @@ export default function Usuarios() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
       setMostrarForm(false);
+      setToast('Usuario creado correctamente');
+      setTimeout(() => setToast(''), 3000);
+    },
+  });
+
+  const estadoMutation = useMutation({
+    mutationFn: ({ id, activo }) => cambiarEstadoUsuario(id, activo),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      setToast(variables.activo ? 'Usuario activado' : 'Usuario desactivado');
+      setTimeout(() => setToast(''), 3000);
+    },
+    onError: (error) => {
+      alert(error.response?.data?.error || 'Error al actualizar el usuario');
     },
   });
 
@@ -44,7 +60,7 @@ export default function Usuarios() {
 
       <main className="max-w-4xl mx-auto px-6 py-8">
         {mutation.isError && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+          <div className="mb-4 max-w-md bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
             {mutation.error?.response?.data?.error || 'Error al crear el usuario.'}
           </div>
         )}
@@ -69,7 +85,9 @@ export default function Usuarios() {
                 <tr>
                   <th className="px-4 py-3 font-medium">Correo</th>
                   <th className="px-4 py-3 font-medium">Rol</th>
+                  <th className="px-4 py-3 font-medium">Estado</th>
                   <th className="px-4 py-3 font-medium">Creado</th>
+                  <th className="px-4 py-3 font-medium"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -81,8 +99,28 @@ export default function Usuarios() {
                         {u.rol}
                       </span>
                     </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          u.activo ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-500'
+                        }`}
+                      >
+                        {u.activo ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-slate-500">
                       {new Date(u.creadoEn).toLocaleDateString('es-EC')}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => estadoMutation.mutate({ id: u.id, activo: !u.activo })}
+                        disabled={estadoMutation.isPending}
+                        className={`text-sm font-medium ${
+                          u.activo ? 'text-slate-400 hover:text-red-700' : 'text-green-700 hover:text-green-800'
+                        } transition`}
+                      >
+                        {u.activo ? 'Desactivar' : 'Activar'}
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -90,6 +128,8 @@ export default function Usuarios() {
             </table>
           </div>
         )}
+
+        <ToastExito mensaje={toast} visible={!!toast} />
       </main>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { resumenGeneral, horasPorPiloto, horasPorUAV, historialMantenimiento } from '../api/reportes';
+import { resumenGeneral, horasPorPiloto, horasPorUAV, historialMantenimiento, descargarPDF, descargarExcel } from '../api/reportes';
 
 export default function Reportes() {
   const { data: resumen } = useQuery({ queryKey: ['reporte-resumen'], queryFn: resumenGeneral });
@@ -10,9 +10,25 @@ export default function Reportes() {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <header className="bg-white border-b border-slate-200 px-6 py-4">
-        <Link to="/" className="text-sm text-slate-500 hover:text-red-700">← Inicio</Link>
-        <h1 className="text-2xl font-bold text-slate-900">Reportes</h1>
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+        <div>
+          <Link to="/" className="text-sm text-slate-500 hover:text-red-700">← Inicio</Link>
+          <h1 className="text-2xl font-bold text-slate-900">Reportes</h1>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={descargarPDF}
+            className="bg-slate-900 text-white text-sm font-medium rounded-lg px-4 py-2 hover:bg-slate-800 transition"
+          >
+            Descargar PDF
+          </button>
+          <button
+            onClick={descargarExcel}
+            className="bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg px-4 py-2 hover:bg-slate-50 transition"
+          >
+            Descargar Excel
+          </button>
+        </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-8">

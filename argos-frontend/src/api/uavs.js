@@ -27,3 +27,8 @@ export async function subirFotoUAV(id, archivo) {
   });
   return data;
 }
+
+export async function finalizarMantenimientoUAV(id) {
+  const { data } = await apiClient.put(`/uavs/${id}/finalizar-mantenimiento`);
+  return data;
+}

@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { listarUAVs, crearUAV, actualizarUAV, subirFotoUAV } from '../api/uavs';
+import { listarUAVs, crearUAV, actualizarUAV, subirFotoUAV, finalizarMantenimientoUAV } from '../api/uavs';
+import { crearMantenimiento, finalizarMantenimiento } from '../api/mantenimientos';
 import { urlFoto } from '../api/config';
 import FormularioUAV from '../components/FormularioUAV';
+import FormularioMantenimiento from '../components/FormularioMantenimiento';
 
 export default function UAVs() {
   const [mostrarForm, setMostrarForm] = useState(false);
   const [uavEditando, setUavEditando] = useState(null);
+  const [uavParaMantenimiento, setUavParaMantenimiento] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: uavs, isLoading, isError } = useQuery({
@@ -27,6 +30,21 @@ export default function UAVs() {
       queryClient.invalidateQueries({ queryKey: ['uavs'] });
       setMostrarForm(false);
       setUavEditando(null);
+    },
+  });
+
+  const mantenimientoMutation = useMutation({
+    mutationFn: crearMantenimiento,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['uavs'] });
+      setUavParaMantenimiento(null);
+    },
+  });
+
+    const finalizarMutation = useMutation({
+    mutationFn: finalizarMantenimientoUAV,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['uavs'] });
     },
   });
 
@@ -77,12 +95,8 @@ export default function UAVs() {
         {uavs && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {uavs.map((uav) => (
-              <div
-                key={uav.id}
-                onClick={() => abrirEdicion(uav)}
-                className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition"
-              >
-                <div className="h-40 bg-slate-200 flex items-center justify-center">
+              <div key={uav.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div onClick={() => abrirEdicion(uav)} className="h-40 bg-slate-200 flex items-center justify-center cursor-pointer">
                   {uav.fotoUrl ? (
                     <img src={urlFoto(uav.fotoUrl)} alt={uav.codigo} className="w-full h-full object-cover" />
                   ) : (
@@ -91,7 +105,9 @@ export default function UAVs() {
                 </div>
                 <div className="p-4">
                   <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-slate-900">{uav.codigo}</h3>
+                    <h3 className="font-semibold text-slate-900 cursor-pointer" onClick={() => abrirEdicion(uav)}>
+                      {uav.codigo}
+                    </h3>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         uav.estado === 'operativo'
@@ -106,6 +122,25 @@ export default function UAVs() {
                   </div>
                   <p className="text-sm text-slate-500 mt-1">{uav.modelo}</p>
                   <p className="text-xs text-slate-400 mt-2">{uav.horasTotales} h totales</p>
+
+                  <div className="mt-3 pt-3 border-t border-slate-100">
+                                        {uav.estado === 'en_mantenimiento' ? (
+                      <button
+                        onClick={() => finalizarMutation.mutate(uav.id)}
+                        disabled={finalizarMutation.isPending}
+                        className="text-sm text-green-700 hover:text-green-800 font-medium"
+                      >
+                        Marcar como operativo
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setUavParaMantenimiento(uav)}
+                        className="text-sm text-amber-700 hover:text-amber-800 font-medium"
+                      >
+                        Registrar mantenimiento
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -114,6 +149,15 @@ export default function UAVs() {
               <p className="text-slate-400 col-span-full text-center py-10">Aún no hay UAVs registrados.</p>
             )}
           </div>
+        )}
+
+        {uavParaMantenimiento && (
+          <FormularioMantenimiento
+            uav={uavParaMantenimiento}
+            onGuardar={(datos) => mantenimientoMutation.mutate(datos)}
+            onCancelar={() => setUavParaMantenimiento(null)}
+            guardando={mantenimientoMutation.isPending}
+          />
         )}
       </main>
     </div>

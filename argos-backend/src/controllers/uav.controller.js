@@ -75,6 +75,22 @@ async function eliminarUAV(req, res) {
   }
 }
 
+async function finalizarMantenimientoUAV(req, res) {
+  try {
+    const uav = await prisma.uAV.update({
+      where: { id: req.params.id },
+      data: { estado: 'operativo' },
+    });
+    res.json(uav);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'UAV no encontrado' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al finalizar mantenimiento' });
+  }
+}
+
 async function subirFotoUAV(req, res) {
   try {
     if (!req.file) {
@@ -99,4 +115,4 @@ async function subirFotoUAV(req, res) {
 }
 
 
-module.exports = { listarUAVs, obtenerUAV, crearUAV, actualizarUAV, eliminarUAV, subirFotoUAV };
+module.exports = { listarUAVs, obtenerUAV, crearUAV, actualizarUAV, eliminarUAV, subirFotoUAV, finalizarMantenimientoUAV };

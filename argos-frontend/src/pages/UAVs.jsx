@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { listarUAVs, crearUAV, actualizarUAV, subirFotoUAV, finalizarMantenimientoUAV } from '../api/uavs';
+import { listarUAVs, crearUAV, actualizarUAV, eliminarUAV, subirFotoUAV, finalizarMantenimientoUAV } from '../api/uavs';
 import { crearMantenimiento, finalizarMantenimiento } from '../api/mantenimientos';
 import { urlFoto } from '../api/config';
 import FormularioUAV from '../components/FormularioUAV';
 import FormularioMantenimiento from '../components/FormularioMantenimiento';
+import ConfirmarAccion from '../components/ConfirmarAccion';
+import ToastExito from '../components/ToastExito';
 
 export default function UAVs() {
   const [mostrarForm, setMostrarForm] = useState(false);
   const [uavEditando, setUavEditando] = useState(null);
   const [uavParaMantenimiento, setUavParaMantenimiento] = useState(null);
+  const [uavParaEliminar, setUavParaEliminar] = useState(null);
+  const [toast, setToast] = useState('');
   const queryClient = useQueryClient();
 
   const { data: uavs, isLoading, isError } = useQuery({
@@ -30,6 +34,8 @@ export default function UAVs() {
       queryClient.invalidateQueries({ queryKey: ['uavs'] });
       setMostrarForm(false);
       setUavEditando(null);
+      setToast('UAV guardado correctamente');
+      setTimeout(() => setToast(''), 3000);
     },
   });
 
@@ -38,13 +44,31 @@ export default function UAVs() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['uavs'] });
       setUavParaMantenimiento(null);
+      setToast('Mantenimiento registrado');
+      setTimeout(() => setToast(''), 3000);
     },
   });
 
-    const finalizarMutation = useMutation({
+  const finalizarMutation = useMutation({
     mutationFn: finalizarMantenimientoUAV,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['uavs'] });
+      setToast('UAV marcado como operativo');
+      setTimeout(() => setToast(''), 3000);
+    },
+  });
+
+    const eliminarMutation = useMutation({
+    mutationFn: eliminarUAV,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['uavs'] });
+      setUavParaEliminar(null);
+      setToast('UAV eliminado');
+      setTimeout(() => setToast(''), 3000);
+    },
+    onError: (error) => {
+      alert(error.response?.data?.error || 'Error al eliminar el UAV');
+      setUavParaEliminar(null);
     },
   });
 
@@ -123,8 +147,8 @@ export default function UAVs() {
                   <p className="text-sm text-slate-500 mt-1">{uav.modelo}</p>
                   <p className="text-xs text-slate-400 mt-2">{uav.horasTotales} h totales</p>
 
-                  <div className="mt-3 pt-3 border-t border-slate-100">
-                                        {uav.estado === 'en_mantenimiento' ? (
+                  <div className="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center">
+                    {uav.estado === 'en_mantenimiento' ? (
                       <button
                         onClick={() => finalizarMutation.mutate(uav.id)}
                         disabled={finalizarMutation.isPending}
@@ -140,6 +164,12 @@ export default function UAVs() {
                         Registrar mantenimiento
                       </button>
                     )}
+                    <button
+                      onClick={() => setUavParaEliminar(uav)}
+                      className="text-sm text-slate-400 hover:text-red-700 transition"
+                    >
+                      Eliminar
+                    </button>
                   </div>
                 </div>
               </div>
@@ -159,6 +189,16 @@ export default function UAVs() {
             guardando={mantenimientoMutation.isPending}
           />
         )}
+
+        {uavParaEliminar && (
+          <ConfirmarAccion
+            mensaje={`¿Eliminar el UAV ${uavParaEliminar.codigo}? Esta acción no se puede deshacer.`}
+            onConfirmar={() => eliminarMutation.mutate(uavParaEliminar.id)}
+            onCancelar={() => setUavParaEliminar(null)}
+          />
+        )}
+
+        <ToastExito mensaje={toast} visible={!!toast} />
       </main>
     </div>
   );

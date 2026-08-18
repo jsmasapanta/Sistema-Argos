@@ -70,6 +70,11 @@ async function eliminarUAV(req, res) {
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'UAV no encontrado' });
     }
+    if (error.code === 'P2003') {
+      return res.status(409).json({
+        error: 'No se puede eliminar: este UAV tiene vuelos o mantenimientos registrados. Márcalo como "de baja" en vez de eliminarlo.',
+      });
+    }
     console.error(error);
     res.status(500).json({ error: 'Error al eliminar UAV' });
   }

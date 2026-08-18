@@ -8,6 +8,7 @@ const {
   actualizarPiloto,
   eliminarPiloto,
   subirFotoPiloto,
+  miPerfil,
 } = require('../controllers/piloto.controller');
 
 const router = express.Router();
@@ -16,6 +17,7 @@ const uploadPiloto = crearUpload('pilotos');
 router.use(authenticate);
 
 router.get('/', listarPilotos);
+router.get('/mi-perfil', miPerfil);
 router.get('/:id', obtenerPiloto);
 router.post('/', checkRole('admin'), crearPiloto);
 router.put('/:id', checkRole('admin', 'operador'), actualizarPiloto);

@@ -128,5 +128,21 @@ async function subirFotoPiloto(req, res) {
   }
 }
 
+async function miPerfil(req, res) {
+  try {
+    const piloto = await prisma.piloto.findUnique({
+      where: { usuarioId: req.user.id },
+    });
 
-module.exports = { listarPilotos, obtenerPiloto, crearPiloto, actualizarPiloto, eliminarPiloto, subirFotoPiloto };
+    if (!piloto) {
+      return res.status(404).json({ error: 'No tienes un perfil de piloto asociado' });
+    }
+
+    res.json(piloto);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener tu perfil' });
+  }
+}
+
+module.exports = { listarPilotos, obtenerPiloto, crearPiloto, actualizarPiloto, eliminarPiloto, subirFotoPiloto, miPerfil };

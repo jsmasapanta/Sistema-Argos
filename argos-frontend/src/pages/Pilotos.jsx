@@ -6,6 +6,7 @@ import { urlFoto } from '../api/config';
 import FormularioPiloto from '../components/FormularioPiloto';
 import ConfirmarAccion from '../components/ConfirmarAccion';
 import ToastExito from '../components/ToastExito';
+import { estadoLicencia } from '../api/utils';
 
 export default function Pilotos() {
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -120,12 +121,25 @@ export default function Pilotos() {
                     <span className="text-slate-400 text-xs">Sin foto</span>
                   )}
                 </div>
-                <div className="flex-1 cursor-pointer" onClick={() => abrirEdicion(piloto)}>
+                                <div className="flex-1 cursor-pointer" onClick={() => abrirEdicion(piloto)}>
                   <h3 className="font-semibold text-slate-900">{piloto.nombre}</h3>
                   <p className="text-sm text-slate-500">{piloto.licencia}</p>
                   <p className="text-xs text-slate-400 mt-1">
                     Vence: {new Date(piloto.vencimientoLicencia).toLocaleDateString('es-EC')}
                   </p>
+                  {(() => {
+                    const estado = estadoLicencia(piloto.vencimientoLicencia);
+                    if (estado.nivel === 'vigente') return null;
+                    return (
+                      <span
+                        className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${
+                          estado.nivel === 'vencida' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                        }`}
+                      >
+                        ⚠ {estado.texto}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <button
                   onClick={() => setPilotoParaEliminar(piloto)}

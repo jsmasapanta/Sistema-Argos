@@ -7,6 +7,7 @@ const TODOS_LOS_MODULOS = [
   { id: 'vuelos', to: '/vuelos', titulo: 'Bitácora de Vuelos', descripcion: 'Registro de vuelos', icono: 'V', color: 'bg-slate-700', roles: ['admin', 'operador'] },
   { id: 'mis-vuelos', to: '/mis-vuelos', titulo: 'Mis Vuelos', descripcion: 'Tu historial de vuelos', icono: 'V', color: 'bg-slate-700', roles: ['piloto'] },
   { id: 'reportes', to: '/reportes', titulo: 'Reportes', descripcion: 'Resumen y estadísticas', icono: '◉', color: 'bg-red-700', roles: ['admin', 'operador'] },
+  { id: 'usuarios', to: '/usuarios', titulo: 'Usuarios', descripcion: 'Cuentas y roles del sistema', icono: '⚙', color: 'bg-slate-900', roles: ['admin'] },
 ];
 
 export default function Inicio() {

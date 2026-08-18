@@ -7,6 +7,7 @@ import Vuelos from './pages/Vuelos';
 import MisVuelos from './pages/MisVuelos';
 import Reportes from './pages/Reportes';
 import RutaProtegida from './components/RutaProtegida';
+import Usuarios from './pages/Usuarios'; 
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       <Route path="/vuelos" element={<RutaProtegida rolesPermitidos={['admin', 'operador']}><Vuelos /></RutaProtegida>} />
       <Route path="/mis-vuelos" element={<RutaProtegida rolesPermitidos={['piloto']}><MisVuelos /></RutaProtegida>} />
       <Route path="/reportes" element={<RutaProtegida rolesPermitidos={['admin', 'operador']}><Reportes /></RutaProtegida>} />
+      <Route path="/usuarios" element={<RutaProtegida rolesPermitidos={['admin']}><Usuarios /></RutaProtegida>} /> {/* junto a las demás rutas */}
     </Routes>
   );
 }

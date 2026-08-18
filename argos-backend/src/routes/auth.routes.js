@@ -60,4 +60,17 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.get('/usuarios', authenticate, checkRole('admin'), async (req, res) => {
+  try {
+    const usuarios = await prisma.usuario.findMany({
+      select: { id: true, email: true, rol: true, activo: true, creadoEn: true },
+      orderBy: { creadoEn: 'desc' },
+    });
+    res.json(usuarios);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al listar usuarios' });
+  }
+});
+
 module.exports = router;

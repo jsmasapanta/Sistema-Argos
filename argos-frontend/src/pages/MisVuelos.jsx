@@ -1,8 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { misVuelos } from '../api/vuelos';
+import { subirFotoPiloto } from '../api/pilotos';
 import apiClient from '../api/client';
 import { estadoLicencia } from '../api/utils';
+import { urlFoto } from '../api/config';
+import ToastExito from '../components/ToastExito';
 
 async function obtenerMiPerfil() {
   const { data } = await apiClient.get('/pilotos/mi-perfil');
@@ -10,6 +14,9 @@ async function obtenerMiPerfil() {
 }
 
 export default function MisVuelos() {
+  const queryClient = useQueryClient();
+  const [toast, setToast] = useState('');
+
   const { data: vuelos, isLoading, isError } = useQuery({
     queryKey: ['mis-vuelos'],
     queryFn: misVuelos,
@@ -19,6 +26,22 @@ export default function MisVuelos() {
     queryKey: ['mi-perfil'],
     queryFn: obtenerMiPerfil,
   });
+
+  const fotoMutation = useMutation({
+    mutationFn: (archivo) => subirFotoPiloto(miPerfil.id, archivo),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mi-perfil'] });
+      setToast('Foto actualizada');
+      setTimeout(() => setToast(''), 3000);
+    },
+  });
+
+  function handleCambiarFoto(e) {
+    const archivo = e.target.files[0];
+    if (archivo) {
+      fotoMutation.mutate(archivo);
+    }
+  }
 
   function calcularHoras(inicio, fin) {
     const horas = (new Date(fin) - new Date(inicio)) / (1000 * 60 * 60);
@@ -49,14 +72,33 @@ export default function MisVuelos() {
         )}
 
         {miPerfil && (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6 flex gap-6">
-            <div>
-              <p className="text-2xl font-bold text-slate-900">{totalHoras.toFixed(1)} h</p>
-              <p className="text-sm text-slate-500">Horas totales voladas</p>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6 flex items-center gap-6">
+            <div className="relative flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+                {miPerfil.fotoUrl ? (
+                  <img src={urlFoto(miPerfil.fotoUrl)} alt={miPerfil.nombre} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-slate-400 text-xs">Sin foto</span>
+                )}
+              </div>
+              <label className="absolute -bottom-1 -right-1 bg-slate-900 text-white text-[10px] rounded-full w-6 h-6 flex items-center justify-center cursor-pointer hover:bg-slate-700 transition">
+                ✎
+                <input type="file" accept="image/*" onChange={handleCambiarFoto} className="hidden" />
+              </label>
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-900">{vuelos?.length || 0}</p>
-              <p className="text-sm text-slate-500">Vuelos registrados</p>
+              <p className="font-semibold text-slate-900">{miPerfil.nombre}</p>
+              <p className="text-sm text-slate-500">{miPerfil.licencia}</p>
+            </div>
+            <div className="ml-auto flex gap-6">
+              <div>
+                <p className="text-2xl font-bold text-slate-900">{totalHoras.toFixed(1)} h</p>
+                <p className="text-sm text-slate-500">Horas totales</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">{vuelos?.length || 0}</p>
+                <p className="text-sm text-slate-500">Vuelos</p>
+              </div>
             </div>
           </div>
         )}
@@ -84,6 +126,8 @@ export default function MisVuelos() {
             )}
           </div>
         )}
+
+        <ToastExito mensaje={toast} visible={!!toast} />
       </main>
     </div>
   );

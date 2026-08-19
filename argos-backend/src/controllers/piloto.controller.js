@@ -111,6 +111,13 @@ async function subirFotoPiloto(req, res) {
       return res.status(400).json({ error: 'No se recibió ninguna imagen' });
     }
 
+    if (req.user.rol === 'piloto') {
+      const pilotoDelUsuario = await prisma.piloto.findUnique({ where: { usuarioId: req.user.id } });
+      if (!pilotoDelUsuario || pilotoDelUsuario.id !== req.params.id) {
+        return res.status(403).json({ error: 'Solo puedes actualizar tu propia foto' });
+      }
+    }
+
     const fotoUrl = `/uploads/pilotos/${req.file.filename}`;
 
     const piloto = await prisma.piloto.update({

@@ -21,7 +21,7 @@ router.get('/mi-perfil', miPerfil);
 router.get('/:id', obtenerPiloto);
 router.post('/', checkRole('admin'), crearPiloto);
 router.put('/:id', checkRole('admin', 'operador'), actualizarPiloto);
-router.post('/:id/foto', checkRole('admin', 'operador'), uploadPiloto.single('foto'), subirFotoPiloto);
+router.post('/:id/foto', checkRole('admin', 'operador', 'piloto'), uploadPiloto.single('foto'), subirFotoPiloto);
 router.delete('/:id', checkRole('admin'), eliminarPiloto);
 
 module.exports = router;

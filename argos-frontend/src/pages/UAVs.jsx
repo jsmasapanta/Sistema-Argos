@@ -8,6 +8,7 @@ import FormularioUAV from '../components/FormularioUAV';
 import FormularioMantenimiento from '../components/FormularioMantenimiento';
 import ConfirmarAccion from '../components/ConfirmarAccion';
 import ToastExito from '../components/ToastExito';
+import { necesitaMantenimientoPronto } from '../api/utils';
 
 export default function UAVs() {
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -123,6 +124,12 @@ export default function UAVs() {
           </div>
         )}
 
+        {uavs && uavs.filter(necesitaMantenimientoPronto).length > 0 && (
+          <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3">
+            ⚠ {uavs.filter(necesitaMantenimientoPronto).length} UAV(s) requieren mantenimiento pronto (50+ horas de vuelo).
+          </div>
+        )}
+
                 <div className="flex gap-3 mb-5">
           <input
             type="text"
@@ -176,6 +183,11 @@ export default function UAVs() {
                   </div>
                   <p className="text-sm text-slate-500 mt-1">{uav.modelo}</p>
                   <p className="text-xs text-slate-400 mt-2">{uav.horasTotales} h totales</p>
+                  {necesitaMantenimientoPronto(uav) && (
+                    <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
+                      ⚠ Requiere mantenimiento pronto
+                    </span>
+                  )}
 
                   <div className="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center">
                     {uav.estado === 'en_mantenimiento' ? (

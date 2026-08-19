@@ -11,3 +11,9 @@ export function estadoLicencia(fecha) {
   if (dias <= 30) return { nivel: 'por_vencer', texto: `Vence en ${dias} día(s)`, dias };
   return { nivel: 'vigente', texto: 'Vigente', dias };
 }
+
+const UMBRAL_HORAS_MANTENIMIENTO = 50;
+
+export function necesitaMantenimientoPronto(uav) {
+  return uav.estado === 'operativo' && uav.horasTotales >= UMBRAL_HORAS_MANTENIMIENTO;
+}

@@ -15,11 +15,21 @@ export default function UAVs() {
   const [uavParaMantenimiento, setUavParaMantenimiento] = useState(null);
   const [uavParaEliminar, setUavParaEliminar] = useState(null);
   const [toast, setToast] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('todos');
   const queryClient = useQueryClient();
 
   const { data: uavs, isLoading, isError } = useQuery({
     queryKey: ['uavs'],
     queryFn: listarUAVs,
+  });
+
+    const uavsFiltrados = uavs?.filter((u) => {
+    const coincideBusqueda =
+      u.codigo.toLowerCase().includes(busqueda.toLowerCase()) ||
+      u.modelo.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideEstado = filtroEstado === 'todos' || u.estado === filtroEstado;
+    return coincideBusqueda && coincideEstado;
   });
 
   const mutation = useMutation({
@@ -113,12 +123,32 @@ export default function UAVs() {
           </div>
         )}
 
+                <div className="flex gap-3 mb-5">
+          <input
+            type="text"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar por código o modelo..."
+            className="flex-1 max-w-sm border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+          />
+          <select
+            value={filtroEstado}
+            onChange={(e) => setFiltroEstado(e.target.value)}
+            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+          >
+            <option value="todos">Todos los estados</option>
+            <option value="operativo">Operativo</option>
+            <option value="en_mantenimiento">En mantenimiento</option>
+            <option value="de_baja">De baja</option>
+          </select>
+        </div>
+
         {isLoading && <p className="text-slate-500">Cargando UAVs...</p>}
         {isError && <p className="text-red-600">Error al cargar los UAVs.</p>}
 
         {uavs && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {uavs.map((uav) => (
+            {uavsFiltrados.map((uav) => (
               <div key={uav.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <div onClick={() => abrirEdicion(uav)} className="h-40 bg-slate-200 flex items-center justify-center cursor-pointer">
                   {uav.fotoUrl ? (
@@ -175,8 +205,10 @@ export default function UAVs() {
               </div>
             ))}
 
-            {uavs.length === 0 && (
-              <p className="text-slate-400 col-span-full text-center py-10">Aún no hay UAVs registrados.</p>
+            {uavsFiltrados.length === 0 && (
+              <p className="text-slate-400 col-span-full text-center py-10">
+                {busqueda || filtroEstado !== 'todos' ? 'Ningún UAV coincide con la búsqueda.' : 'Aún no hay UAVs registrados.'}
+              </p>
             )}
           </div>
         )}

@@ -188,6 +188,9 @@ export default function UAVs() {
                       ⚠ Requiere mantenimiento pronto
                     </span>
                   )}
+                  <p className="text-xs text-slate-300 mt-2">
+                    {uav.creadoPor ? `Creado por ${uav.creadoPor.email}` : 'Creador no registrado'} · {new Date(uav.creadoEn).toLocaleDateString('es-EC')}
+                  </p>
 
                   <div className="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center">
                     {uav.estado === 'en_mantenimiento' ? (

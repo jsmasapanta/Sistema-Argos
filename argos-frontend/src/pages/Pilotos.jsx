@@ -156,6 +156,9 @@ export default function Pilotos() {
                       </span>
                     );
                   })()}
+                                    <p className="text-xs text-slate-300 mt-2">
+                    {piloto.creadoPor ? `Creado por ${piloto.creadoPor.email}` : 'Creador no registrado'} · {new Date(piloto.creadoEn).toLocaleDateString('es-EC')}
+                  </p>
                 </div>
                 <button
                   onClick={() => setPilotoParaEliminar(piloto)}

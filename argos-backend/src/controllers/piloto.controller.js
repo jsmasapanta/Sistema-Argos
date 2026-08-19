@@ -3,7 +3,10 @@ const prisma = require('../config/prisma');
 async function listarPilotos(req, res) {
   try {
     const pilotos = await prisma.piloto.findMany({
-      include: { usuario: { select: { email: true } } },
+      include: {
+        usuario: { select: { email: true } },
+        creadoPor: { select: { email: true } },
+      },
       orderBy: { nombre: 'asc' },
     });
     res.json(pilotos);
@@ -51,6 +54,7 @@ async function crearPiloto(req, res) {
         nombre,
         licencia,
         vencimientoLicencia: new Date(vencimientoLicencia),
+        creadoPorId: req.user.id,
       },
     });
 

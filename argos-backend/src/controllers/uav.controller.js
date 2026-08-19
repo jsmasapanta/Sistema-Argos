@@ -2,7 +2,10 @@ const prisma = require('../config/prisma');
 
 async function listarUAVs(req, res) {
   try {
-    const uavs = await prisma.uAV.findMany({ orderBy: { codigo: 'asc' } });
+    const uavs = await prisma.uAV.findMany({
+      include: { creadoPor: { select: { email: true } } },
+      orderBy: { codigo: 'asc' },
+    });
     res.json(uavs);
   } catch (error) {
     console.error(error);
@@ -30,7 +33,7 @@ async function crearUAV(req, res) {
     }
 
     const uav = await prisma.uAV.create({
-      data: { codigo, modelo, estado },
+      data: { codigo, modelo, estado, creadoPorId: req.user.id },
     });
 
     res.status(201).json(uav);

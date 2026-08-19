@@ -27,7 +27,9 @@ model Usuario {
   activo       Boolean  @default(true)
   creadoEn     DateTime @default(now()) @map("creado_en")
 
-  piloto Piloto?
+  piloto         Piloto?
+  uavsCreados    UAV[]    @relation("UAVCreador")
+  pilotosCreados Piloto[] @relation("PilotoCreador")
 
   @@map("usuarios")
 }
@@ -42,18 +44,26 @@ model Piloto {
   fotoUrl             String?   @map("foto_url")
   vuelos              Vuelo[]
 
+  creadoPorId String?   @map("creado_por_id")
+  creadoPor   Usuario?  @relation("PilotoCreador", fields: [creadoPorId], references: [id])
+  creadoEn    DateTime  @default(now()) @map("creado_en")
+
   @@map("pilotos")
 }
 
 model UAV {
-  id            String          @id @default(uuid())
-  codigo        String          @unique
-  modelo        String
-  estado        EstadoUAV       @default(operativo)
-  horasTotales  Int             @default(0) @map("horas_totales")
-  fotoUrl       String?         @map("foto_url")
-  vuelos        Vuelo[]
+  id             String          @id @default(uuid())
+  codigo         String          @unique
+  modelo         String
+  estado         EstadoUAV       @default(operativo)
+  horasTotales   Int             @default(0) @map("horas_totales")
+  fotoUrl        String?         @map("foto_url")
+  vuelos         Vuelo[]
   mantenimientos Mantenimiento[]
+
+  creadoPorId String?   @map("creado_por_id")
+  creadoPor   Usuario?  @relation("UAVCreador", fields: [creadoPorId], references: [id])
+  creadoEn    DateTime  @default(now()) @map("creado_en")
 
   @@map("uavs")
 }

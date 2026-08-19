@@ -13,12 +13,18 @@ export default function Pilotos() {
   const [pilotoEditando, setPilotoEditando] = useState(null);
   const [pilotoParaEliminar, setPilotoParaEliminar] = useState(null);
   const [toast, setToast] = useState('');
+  const [busqueda, setBusqueda] = useState('');
   const queryClient = useQueryClient();
 
   const { data: pilotos, isLoading, isError } = useQuery({
     queryKey: ['pilotos'],
     queryFn: listarPilotos,
   });
+
+  const pilotosFiltrados = pilotos?.filter((p) =>
+    p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+    p.licencia.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   const mutation = useMutation({
     mutationFn: async ({ datos, archivo, id }) => {
@@ -101,12 +107,22 @@ export default function Pilotos() {
           </div>
         )}
 
+        <div className="mb-5">
+          <input
+            type="text"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar por nombre o licencia..."
+            className="w-full max-w-sm border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+          />
+        </div>
+
         {isLoading && <p className="text-slate-500">Cargando pilotos...</p>}
         {isError && <p className="text-red-600">Error al cargar los pilotos.</p>}
 
         {pilotos && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {pilotos.map((piloto) => (
+            {pilotosFiltrados.map((piloto) => (
               <div
                 key={piloto.id}
                 className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition"
@@ -121,7 +137,7 @@ export default function Pilotos() {
                     <span className="text-slate-400 text-xs">Sin foto</span>
                   )}
                 </div>
-                                <div className="flex-1 cursor-pointer" onClick={() => abrirEdicion(piloto)}>
+                <div className="flex-1 cursor-pointer" onClick={() => abrirEdicion(piloto)}>
                   <h3 className="font-semibold text-slate-900">{piloto.nombre}</h3>
                   <p className="text-sm text-slate-500">{piloto.licencia}</p>
                   <p className="text-xs text-slate-400 mt-1">
@@ -150,8 +166,10 @@ export default function Pilotos() {
               </div>
             ))}
 
-            {pilotos.length === 0 && (
-              <p className="text-slate-400 col-span-full text-center py-10">Aún no hay pilotos registrados.</p>
+            {pilotosFiltrados.length === 0 && (
+              <p className="text-slate-400 col-span-full text-center py-10">
+                {busqueda ? 'Ningún piloto coincide con la búsqueda.' : 'Aún no hay pilotos registrados.'}
+              </p>
             )}
           </div>
         )}

@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { listarVuelos, crearVuelo } from '../api/vuelos';
+import { listarVuelos, crearVuelo, actualizarVuelo } from '../api/vuelos';
 import FormularioVuelo from '../components/FormularioVuelo';
 
 export default function Vuelos() {
   const [mostrarForm, setMostrarForm] = useState(false);
   const queryClient = useQueryClient();
+  const [editandoNovedades, setEditandoNovedades] = useState(null);
+  const [textoNovedades, setTextoNovedades] = useState('');
+
 
   const { data: vuelos, isLoading, isError } = useQuery({
     queryKey: ['vuelos'],
@@ -21,6 +24,23 @@ export default function Vuelos() {
       setMostrarForm(false);
     },
   });
+
+    const actualizarMutation = useMutation({
+    mutationFn: ({ id, novedades }) => actualizarVuelo(id, { novedades }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vuelos'] });
+      setEditandoNovedades(null);
+    },
+  });
+
+  function iniciarEdicion(vuelo) {
+    setEditandoNovedades(vuelo.id);
+    setTextoNovedades(vuelo.novedades || '');
+  }
+
+  function guardarNovedades(id) {
+    actualizarMutation.mutate({ id, novedades: textoNovedades });
+  }
 
   function calcularHoras(inicio, fin) {
     const horas = (new Date(fin) - new Date(inicio)) / (1000 * 60 * 60);
@@ -83,7 +103,38 @@ export default function Vuelos() {
                     <td className="px-4 py-3 text-slate-600">{new Date(v.fechaInicio).toLocaleString('es-EC')}</td>
                     <td className="px-4 py-3 text-slate-600">{new Date(v.fechaFin).toLocaleString('es-EC')}</td>
                     <td className="px-4 py-3 text-slate-600">{calcularHoras(v.fechaInicio, v.fechaFin)} h</td>
-                    <td className="px-4 py-3 text-slate-500">{v.novedades || '—'}</td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {editandoNovedades === v.id ? (
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="text"
+                            value={textoNovedades}
+                            onChange={(e) => setTextoNovedades(e.target.value)}
+                            className="border border-slate-300 rounded px-2 py-1 text-sm flex-1"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => guardarNovedades(v.id)}
+                            className="text-green-700 hover:text-green-800 text-xs font-medium"
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            onClick={() => setEditandoNovedades(null)}
+                            className="text-slate-400 hover:text-slate-600 text-xs"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <span
+                          onClick={() => iniciarEdicion(v)}
+                          className="cursor-pointer hover:text-slate-900 hover:underline"
+                        >
+                          {v.novedades || 'Agregar novedad...'}
+                        </span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { UserCog, Plus } from 'lucide-react';
 import { listarUsuarios, registrarUsuario, cambiarEstadoUsuario, cambiarRolUsuario } from '../api/usuarios';
+import Layout from '../components/Layout';
 import FormularioUsuario from '../components/FormularioUsuario';
 import ToastExito from '../components/ToastExito';
 
@@ -32,9 +33,7 @@ export default function Usuarios() {
       setToast(variables.activo ? 'Usuario activado' : 'Usuario desactivado');
       setTimeout(() => setToast(''), 3000);
     },
-    onError: (error) => {
-      alert(error.response?.data?.error || 'Error al actualizar el usuario');
-    },
+    onError: (error) => alert(error.response?.data?.error || 'Error al actualizar el usuario'),
   });
 
   const rolMutation = useMutation({
@@ -44,9 +43,7 @@ export default function Usuarios() {
       setToast('Rol actualizado');
       setTimeout(() => setToast(''), 3000);
     },
-    onError: (error) => {
-      alert(error.response?.data?.error || 'Error al actualizar el rol');
-    },
+    onError: (error) => alert(error.response?.data?.error || 'Error al actualizar el rol'),
   });
 
   function handleCambiarRol(usuario, nuevoRol) {
@@ -54,35 +51,36 @@ export default function Usuarios() {
     const confirmar = window.confirm(
       `¿Cambiar el rol de ${usuario.email} de "${usuario.rol}" a "${nuevoRol}"?\n\nSi este usuario tiene un perfil de piloto, no se eliminará automáticamente.`
     );
-    if (confirmar) {
-      rolMutation.mutate({ id: usuario.id, rol: nuevoRol });
-    }
+    if (confirmar) rolMutation.mutate({ id: usuario.id, rol: nuevoRol });
   }
 
   const colorRol = {
-    admin: 'bg-slate-900 text-white',
-    operador: 'bg-red-100 text-red-700',
+    admin: 'bg-navy-dark text-white',
+    operador: 'bg-accent/10 text-accent',
     piloto: 'bg-slate-200 text-slate-700',
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-        <div>
-          <Link to="/" className="text-sm text-slate-500 hover:text-red-700">← Inicio</Link>
-          <h1 className="text-2xl font-bold text-slate-900">Usuarios</h1>
+    <Layout>
+      <div className="px-10 py-8">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <p className="text-[11px] font-semibold text-accent tracking-widest uppercase mb-1 flex items-center gap-1.5">
+              <UserCog size={13} /> Módulo
+            </p>
+            <h1 className="font-display font-semibold text-3xl text-navy-dark">Usuarios</h1>
+            <p className="text-sm text-slate-500 mt-1">Cuentas y roles del sistema</p>
+          </div>
+          <button
+            onClick={() => setMostrarForm(true)}
+            className="flex items-center gap-1.5 bg-navy-dark text-white text-sm font-medium px-4 py-2.5 hover:bg-navy transition"
+          >
+            <Plus size={16} /> Nuevo usuario
+          </button>
         </div>
-        <button
-          onClick={() => setMostrarForm(true)}
-          className="bg-slate-900 text-white text-sm font-medium rounded-lg px-4 py-2 hover:bg-slate-800 transition"
-        >
-          + Nuevo usuario
-        </button>
-      </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
         {mutation.isError && (
-          <div className="mb-4 max-w-md bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+          <div className="mb-4 max-w-md bg-accent/10 border border-accent/30 text-accent text-sm px-4 py-3">
             {mutation.error?.response?.data?.error || 'Error al crear el usuario.'}
           </div>
         )}
@@ -97,31 +95,31 @@ export default function Usuarios() {
           </div>
         )}
 
-        {isLoading && <p className="text-slate-500">Cargando usuarios...</p>}
-        {isError && <p className="text-red-600">Error al cargar los usuarios.</p>}
+        {isLoading && <p className="text-slate-500 text-sm">Cargando usuarios...</p>}
+        {isError && <p className="text-accent text-sm">Error al cargar los usuarios.</p>}
 
         {usuarios && (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white border border-slate-200 overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-slate-500 text-left">
+              <thead className="bg-navy-dark text-white text-left">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Correo</th>
-                  <th className="px-4 py-3 font-medium">Rol</th>
-                  <th className="px-4 py-3 font-medium">Estado</th>
-                  <th className="px-4 py-3 font-medium">Creado</th>
-                  <th className="px-4 py-3 font-medium"></th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wide font-medium">Correo</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wide font-medium">Rol</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wide font-medium">Estado</th>
+                  <th className="px-4 py-3 text-xs uppercase tracking-wide font-medium">Creado</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {usuarios.map((u) => (
                   <tr key={u.id}>
-                    <td className="px-4 py-3 text-slate-900">{u.email}</td>
+                    <td className="px-4 py-3 text-navy-dark font-medium">{u.email}</td>
                     <td className="px-4 py-3">
                       <select
                         value={u.rol}
                         onChange={(e) => handleCambiarRol(u, e.target.value)}
                         disabled={rolMutation.isPending}
-                        className={`text-xs px-2 py-1 rounded-full font-medium border-0 cursor-pointer ${colorRol[u.rol]}`}
+                        className={`text-[10px] px-2 py-1 font-semibold uppercase tracking-wide border-0 cursor-pointer ${colorRol[u.rol]}`}
                       >
                         <option value="admin">admin</option>
                         <option value="operador">operador</option>
@@ -129,24 +127,16 @@ export default function Usuarios() {
                       </select>
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          u.activo ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-500'
-                        }`}
-                      >
+                      <span className={`text-[10px] px-2 py-0.5 font-semibold uppercase tracking-wide ${u.activo ? 'bg-success/10 text-success' : 'bg-slate-200 text-slate-500'}`}>
                         {u.activo ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-slate-500">
-                      {new Date(u.creadoEn).toLocaleDateString('es-EC')}
-                    </td>
+                    <td className="px-4 py-3 text-slate-500">{new Date(u.creadoEn).toLocaleDateString('es-EC')}</td>
                     <td className="px-4 py-3 text-right">
                       <button
                         onClick={() => estadoMutation.mutate({ id: u.id, activo: !u.activo })}
                         disabled={estadoMutation.isPending}
-                        className={`text-sm font-medium ${
-                          u.activo ? 'text-slate-400 hover:text-red-700' : 'text-green-700 hover:text-green-800'
-                        } transition`}
+                        className={`text-xs font-semibold uppercase tracking-wide ${u.activo ? 'text-slate-400 hover:text-accent' : 'text-success hover:opacity-70'} transition`}
                       >
                         {u.activo ? 'Desactivar' : 'Activar'}
                       </button>
@@ -159,7 +149,7 @@ export default function Usuarios() {
         )}
 
         <ToastExito mensaje={toast} visible={!!toast} />
-      </main>
-    </div>
+      </div>
+    </Layout>
   );
 }

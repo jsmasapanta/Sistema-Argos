@@ -1,49 +1,40 @@
 import { useAuth } from '../context/AuthContext';
+import Layout from '../components/Layout';
 import ModuleCard from '../components/ModuleCard';
+import { Plane, Users, ClipboardList, BarChart3, UserCog } from 'lucide-react';
 
 const TODOS_LOS_MODULOS = [
-  { id: 'uavs', to: '/uavs', titulo: 'UAVs', descripcion: 'Registro y estado de drones', icono: '✈', color: 'bg-slate-900', roles: ['admin', 'operador'] },
-  { id: 'pilotos', to: '/pilotos', titulo: 'Pilotos', descripcion: 'Personal y licencias', icono: '👤', color: 'bg-red-700', roles: ['admin', 'operador'] },
-  { id: 'vuelos', to: '/vuelos', titulo: 'Bitácora de Vuelos', descripcion: 'Registro de vuelos', icono: 'V', color: 'bg-slate-700', roles: ['admin', 'operador'] },
-  { id: 'mis-vuelos', to: '/mis-vuelos', titulo: 'Mis Vuelos', descripcion: 'Tu historial de vuelos', icono: 'V', color: 'bg-slate-700', roles: ['piloto'] },
-  { id: 'reportes', to: '/reportes', titulo: 'Reportes', descripcion: 'Resumen y estadísticas', icono: '◉', color: 'bg-red-700', roles: ['admin', 'operador'] },
-  { id: 'usuarios', to: '/usuarios', titulo: 'Usuarios', descripcion: 'Cuentas y roles del sistema', icono: '⚙', color: 'bg-slate-900', roles: ['admin'] },
+  { id: 'uavs', to: '/uavs', titulo: 'UAVs', descripcion: 'Registro y estado de drones', Icon: Plane, roles: ['admin', 'operador'] },
+  { id: 'pilotos', to: '/pilotos', titulo: 'Pilotos', descripcion: 'Personal y licencias', Icon: Users, roles: ['admin', 'operador'] },
+  { id: 'vuelos', to: '/vuelos', titulo: 'Bitácora de Vuelos', descripcion: 'Registro de vuelos', Icon: ClipboardList, roles: ['admin', 'operador'] },
+  { id: 'mis-vuelos', to: '/mis-vuelos', titulo: 'Mis Vuelos', descripcion: 'Tu historial de vuelos', Icon: ClipboardList, roles: ['piloto'] },
+  { id: 'reportes', to: '/reportes', titulo: 'Reportes', descripcion: 'Resumen y estadísticas', Icon: BarChart3, roles: ['admin', 'operador'] },
+  { id: 'usuarios', to: '/usuarios', titulo: 'Usuarios', descripcion: 'Cuentas y roles del sistema', Icon: UserCog, roles: ['admin'] },
 ];
 
 export default function Inicio() {
-  const { usuario, logout } = useAuth();
-
+  const { usuario } = useAuth();
   const modulosVisibles = TODOS_LOS_MODULOS.filter((m) => m.roles.includes(usuario?.rol));
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <header className="bg-white border-b border-slate-200">
-        <div className="h-1.5 bg-red-700" />
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div>
-            <p className="text-xs font-semibold text-red-700 tracking-wide">EJÉRCITO ECUATORIANO · GMREC</p>
-            <h1 className="text-xl font-bold text-slate-900">SISTEMA ARGOS</h1>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-slate-700">{usuario?.email}</p>
-            <button onClick={logout} className="text-xs text-slate-500 hover:text-red-700 transition">
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
-      </header>
+    <Layout>
+      <div className="px-10 py-8">
+        <p className="text-[11px] font-semibold text-accent tracking-widest uppercase mb-1">
+          Ejército Ecuatoriano · GMREC
+        </p>
+        <h1 className="font-display font-semibold text-3xl text-navy-dark mb-1">
+          Sistema ARGOS
+        </h1>
+        <p className="text-sm text-slate-500 mb-8">
+          Sesión activa: <span className="capitalize font-medium text-slate-700">{usuario?.rol}</span>
+        </p>
 
-      <main className="max-w-6xl mx-auto px-6 py-10">
-        <h2 className="text-lg font-semibold text-slate-800 mb-6">
-          Bienvenido — rol: <span className="capitalize">{usuario?.rol}</span>
-        </h2>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {modulosVisibles.map((m) => (
-            <ModuleCard key={m.id} to={m.to} titulo={m.titulo} descripcion={m.descripcion} icono={m.icono} color={m.color} />
+            <ModuleCard key={m.id} to={m.to} titulo={m.titulo} descripcion={m.descripcion} Icon={m.Icon} />
           ))}
         </div>
-      </main>
-    </div>
+      </div>
+    </Layout>
   );
 }

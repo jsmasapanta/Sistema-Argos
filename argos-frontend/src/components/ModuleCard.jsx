@@ -1,18 +1,20 @@
 import { Link } from 'react-router-dom';
 
-export default function ModuleCard({ to, titulo, descripcion, icono, color }) {
+export default function ModuleCard({ to, titulo, descripcion, Icon }) {
   return (
     <Link
       to={to}
-      className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-6 flex flex-col items-center text-center"
+      className="group bg-white border border-slate-200 hover:border-navy transition-colors flex flex-col"
     >
-      <div
-        className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold text-white mb-3 ${color}`}
-      >
-        {icono}
+      <div className="h-28 bg-navy-dark flex items-center justify-center relative overflow-hidden">
+        <Icon size={32} className="text-white/90 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-dark/40 to-transparent" />
       </div>
-      <h3 className="font-semibold text-slate-900">{titulo}</h3>
-      <p className="text-sm text-slate-500 mt-1">{descripcion}</p>
+      <div className="p-5">
+        <p className="text-[10px] font-semibold text-accent tracking-widest uppercase mb-1">Módulo</p>
+        <h3 className="font-display font-semibold text-navy-dark text-base">{titulo}</h3>
+        <p className="text-sm text-slate-500 mt-1">{descripcion}</p>
+      </div>
     </Link>
   );
 }

@@ -26,14 +26,22 @@ async function obtenerUAV(req, res) {
 
 async function crearUAV(req, res) {
   try {
-    const { codigo, modelo, estado } = req.body;
+    const { codigo, modelo, estado, pesoMaximo, autonomia, alcanceMax, velocidadMax, camara, serialId } = req.body;
 
     if (!codigo || !modelo) {
       return res.status(400).json({ error: 'codigo y modelo son requeridos' });
     }
 
     const uav = await prisma.uAV.create({
-      data: { codigo, modelo, estado, creadoPorId: req.user.id },
+      data: {
+        codigo, modelo, estado, creadoPorId: req.user.id,
+        pesoMaximo: pesoMaximo ? parseFloat(pesoMaximo) : undefined,
+        autonomia: autonomia ? parseInt(autonomia) : undefined,
+        alcanceMax: alcanceMax ? parseInt(alcanceMax) : undefined,
+        velocidadMax: velocidadMax ? parseInt(velocidadMax) : undefined,
+        camara: camara || undefined,
+        serialId: serialId || undefined,
+      },
     });
 
     res.status(201).json(uav);
@@ -48,11 +56,19 @@ async function crearUAV(req, res) {
 
 async function actualizarUAV(req, res) {
   try {
-    const { modelo, estado, horasTotales } = req.body;
+    const { modelo, estado, horasTotales, pesoMaximo, autonomia, alcanceMax, velocidadMax, camara, serialId } = req.body;
 
     const uav = await prisma.uAV.update({
       where: { id: req.params.id },
-      data: { modelo, estado, horasTotales },
+      data: {
+        modelo, estado, horasTotales,
+        pesoMaximo: pesoMaximo !== undefined ? (pesoMaximo ? parseFloat(pesoMaximo) : null) : undefined,
+        autonomia: autonomia !== undefined ? (autonomia ? parseInt(autonomia) : null) : undefined,
+        alcanceMax: alcanceMax !== undefined ? (alcanceMax ? parseInt(alcanceMax) : null) : undefined,
+        velocidadMax: velocidadMax !== undefined ? (velocidadMax ? parseInt(velocidadMax) : null) : undefined,
+        camara: camara !== undefined ? (camara || null) : undefined,
+        serialId: serialId !== undefined ? (serialId || null) : undefined,
+      },
     });
 
     res.json(uav);

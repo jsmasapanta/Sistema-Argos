@@ -4,7 +4,7 @@ async function listarVuelos(req, res) {
   try {
     const vuelos = await prisma.vuelo.findMany({
       include: {
-        piloto: { select: { nombre: true } },
+        piloto: { select: { nombre: true, licencia: true, fotoUrl: true } },
         uav: { select: { codigo: true, modelo: true } },
       },
       orderBy: { fechaInicio: 'desc' },
@@ -50,7 +50,7 @@ async function misVuelos(req, res) {
 
 async function crearVuelo(req, res) {
   try {
-    const { pilotoId, uavId, fechaInicio, fechaFin, novedades } = req.body || {};
+    const { pilotoId, uavId, fechaInicio, fechaFin, novedades, estado, mision, objetivo, areaSector, rutaCoordenadas, condicionesClimaticas, bateriaUtilizada } = req.body || {};
 
     if (!pilotoId || !uavId || !fechaInicio || !fechaFin) {
       return res.status(400).json({
@@ -91,7 +91,16 @@ async function crearVuelo(req, res) {
     // Transacción: crear el vuelo Y sumar horas al UAV al mismo tiempo (todo o nada)
     const [vuelo] = await prisma.$transaction([
       prisma.vuelo.create({
-        data: { pilotoId, uavId, fechaInicio: inicio, fechaFin: fin, novedades },
+        data: {
+          pilotoId, uavId, fechaInicio: inicio, fechaFin: fin, novedades,
+          estado: estado || 'completado',
+          mision: mision || undefined,
+          objetivo: objetivo || undefined,
+          areaSector: areaSector || undefined,
+          rutaCoordenadas: rutaCoordenadas || undefined,
+          condicionesClimaticas: condicionesClimaticas || undefined,
+          bateriaUtilizada: bateriaUtilizada ? parseInt(bateriaUtilizada) : undefined,
+        },
       }),
       prisma.uAV.update({
         where: { id: uavId },
@@ -108,10 +117,19 @@ async function crearVuelo(req, res) {
 
 async function actualizarVuelo(req, res) {
   try {
-    const { novedades } = req.body || {};
+    const { novedades, estado, mision, objetivo, areaSector, rutaCoordenadas, condicionesClimaticas, bateriaUtilizada } = req.body || {};
     const vuelo = await prisma.vuelo.update({
       where: { id: req.params.id },
-      data: { novedades },
+      data: {
+        novedades,
+        estado: estado || undefined,
+        mision: mision !== undefined ? (mision || null) : undefined,
+        objetivo: objetivo !== undefined ? (objetivo || null) : undefined,
+        areaSector: areaSector !== undefined ? (areaSector || null) : undefined,
+        rutaCoordenadas: rutaCoordenadas !== undefined ? (rutaCoordenadas || null) : undefined,
+        condicionesClimaticas: condicionesClimaticas !== undefined ? (condicionesClimaticas || null) : undefined,
+        bateriaUtilizada: bateriaUtilizada !== undefined ? (bateriaUtilizada ? parseInt(bateriaUtilizada) : null) : undefined,
+      },
     });
     res.json(vuelo);
   } catch (error) {

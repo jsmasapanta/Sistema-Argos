@@ -6,6 +6,7 @@ async function listarPilotos(req, res) {
       include: {
         usuario: { select: { email: true } },
         creadoPor: { select: { email: true } },
+        uavAsignado: { select: { codigo: true } },
       },
       orderBy: { nombre: 'asc' },
     });
@@ -32,7 +33,7 @@ async function obtenerPiloto(req, res) {
 
 async function crearPiloto(req, res) {
   try {
-    const { usuarioId, nombre, licencia, vencimientoLicencia } = req.body || {};
+    const { usuarioId, nombre, licencia, vencimientoLicencia, rango, especialidad, uavAsignadoId } = req.body || {};
 
     if (!usuarioId || !nombre || !licencia || !vencimientoLicencia) {
       return res.status(400).json({
@@ -55,6 +56,9 @@ async function crearPiloto(req, res) {
         licencia,
         vencimientoLicencia: new Date(vencimientoLicencia),
         creadoPorId: req.user.id,
+        rango: rango || undefined,
+        especialidad: especialidad || undefined,
+        uavAsignadoId: uavAsignadoId || undefined,
       },
     });
 
@@ -70,7 +74,7 @@ async function crearPiloto(req, res) {
 
 async function actualizarPiloto(req, res) {
   try {
-    const { nombre, licencia, vencimientoLicencia } = req.body;
+    const { nombre, licencia, vencimientoLicencia, rango, especialidad, uavAsignadoId } = req.body;
 
     const piloto = await prisma.piloto.update({
       where: { id: req.params.id },
@@ -78,10 +82,14 @@ async function actualizarPiloto(req, res) {
         nombre,
         licencia,
         vencimientoLicencia: vencimientoLicencia ? new Date(vencimientoLicencia) : undefined,
+        rango: rango !== undefined ? (rango || null) : undefined,
+        especialidad: especialidad !== undefined ? (especialidad || null) : undefined,
+        uavAsignadoId: uavAsignadoId !== undefined ? (uavAsignadoId || null) : undefined,
       },
     });
 
     res.json(piloto);
+
   } catch (error) {
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'Piloto no encontrado' });

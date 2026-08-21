@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Plane, Users, ClipboardList, BarChart3, UserCog, LogOut, Shield } from 'lucide-react';
+import selloHero from '../assets/sello-hero.png';
 
 const MODULOS_NAV = [
   { to: '/uavs', label: 'UAVs', icon: Plane, roles: ['admin', 'operador'] },
@@ -22,11 +23,11 @@ export default function Layout({ children }) {
 
       <aside className="w-60 bg-navy-dark flex flex-col fixed top-1.5 bottom-0 left-0 z-10">
         <div className="px-5 py-6 border-b border-navy-light/40">
-          <div className="flex items-center gap-2">
-            <Shield size={22} className="text-accent" strokeWidth={2} />
+          <div className="flex items-center gap-2.5">
+            <img src={selloHero} alt="Sello ARGOS" className="w-10 h-10 object-contain flex-shrink-0" />
             <div>
-              <p className="text-[10px] font-medium text-ice/60 tracking-widest uppercase">GMREC</p>
-              <p className="font-display font-semibold text-white text-lg leading-none">ARGOS</p>
+              <p className="text-[10px] font-medium text-gold tracking-[0.15em] uppercase">GMREC</p>
+              <p className="font-display font-semibold text-white text-lg leading-none tracking-wide">ARGOS</p>
             </div>
           </div>
         </div>

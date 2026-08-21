@@ -13,9 +13,30 @@ async function listarMantenimientos(req, res) {
   }
 }
 
+async function actualizarMantenimiento(req, res) {
+  try {
+    const { estado, tipo, descripcion } = req.body || {};
+    const mantenimiento = await prisma.mantenimiento.update({
+      where: { id: req.params.id },
+      data: {
+        estado: estado || undefined,
+        tipo: tipo || undefined,
+        descripcion: descripcion !== undefined ? descripcion : undefined,
+      },
+    });
+    res.json(mantenimiento);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Mantenimiento no encontrado' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar mantenimiento' });
+  }
+}
+
 async function crearMantenimiento(req, res) {
   try {
-    const { uavId, fecha, tipo, descripcion } = req.body || {};
+    const { uavId, fecha, tipo, descripcion, estado } = req.body || {};
 
     if (!uavId || !fecha || !tipo) {
       return res.status(400).json({ error: 'uavId, fecha y tipo son requeridos' });
@@ -26,10 +47,9 @@ async function crearMantenimiento(req, res) {
       return res.status(404).json({ error: 'UAV no encontrado' });
     }
 
-    // Transacción: crea el registro de mantenimiento Y actualiza el estado del UAV al mismo tiempo
     const [mantenimiento] = await prisma.$transaction([
       prisma.mantenimiento.create({
-        data: { uavId, fecha: new Date(fecha), tipo, descripcion },
+        data: { uavId, fecha: new Date(fecha), tipo, descripcion, estado: estado || 'pendiente' },
       }),
       prisma.uAV.update({
         where: { id: uavId },
@@ -63,4 +83,4 @@ async function finalizarMantenimiento(req, res) {
   }
 }
 
-module.exports = { listarMantenimientos, crearMantenimiento, finalizarMantenimiento };
+module.exports = { listarMantenimientos, crearMantenimiento, finalizarMantenimiento, actualizarMantenimiento };

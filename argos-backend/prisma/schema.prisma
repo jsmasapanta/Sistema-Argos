@@ -30,6 +30,7 @@ model Usuario {
   piloto         Piloto?
   uavsCreados    UAV[]    @relation("UAVCreador")
   pilotosCreados Piloto[] @relation("PilotoCreador")
+  ultimoAcceso DateTime? @map("ultimo_acceso")
 
   @@map("usuarios")
 }
@@ -47,6 +48,10 @@ model Piloto {
   creadoPorId String?   @map("creado_por_id")
   creadoPor   Usuario?  @relation("PilotoCreador", fields: [creadoPorId], references: [id])
   creadoEn    DateTime  @default(now()) @map("creado_en")
+  rango               String?
+  especialidad        String?
+  uavAsignadoId       String?   @map("uav_asignado_id")
+  uavAsignado         UAV?      @relation("UAVAsignado", fields: [uavAsignadoId], references: [id])
 
   @@map("pilotos")
 }
@@ -64,30 +69,57 @@ model UAV {
   creadoPorId String?   @map("creado_por_id")
   creadoPor   Usuario?  @relation("UAVCreador", fields: [creadoPorId], references: [id])
   creadoEn    DateTime  @default(now()) @map("creado_en")
+  pesoMaximo    Float?          @map("peso_maximo")
+  autonomia     Int?
+  alcanceMax    Int?            @map("alcance_max")
+  velocidadMax  Int?            @map("velocidad_max")
+  camara        String?
+  serialId      String?         @unique @map("serial_id")
+  pilotosAsignados Piloto[] @relation("UAVAsignado")
 
   @@map("uavs")
 }
 
 model Vuelo {
-  id           String   @id @default(uuid())
-  pilotoId     String   @map("piloto_id")
-  piloto       Piloto   @relation(fields: [pilotoId], references: [id])
-  uavId        String   @map("uav_id")
-  uav          UAV      @relation(fields: [uavId], references: [id])
-  fechaInicio  DateTime @map("fecha_inicio")
-  fechaFin     DateTime @map("fecha_fin")
-  novedades    String?
+  id                     String       @id @default(uuid())
+  pilotoId               String       @map("piloto_id")
+  piloto                 Piloto       @relation(fields: [pilotoId], references: [id])
+  uavId                  String       @map("uav_id")
+  uav                    UAV          @relation(fields: [uavId], references: [id])
+  fechaInicio            DateTime     @map("fecha_inicio")
+  fechaFin               DateTime     @map("fecha_fin")
+  novedades              String?
+  estado                 EstadoVuelo  @default(completado)
+  mision                 String?
+  objetivo               String?
+  areaSector             String?      @map("area_sector")
+  rutaCoordenadas        String?      @map("ruta_coordenadas")
+  condicionesClimaticas  String?      @map("condiciones_climaticas")
+  bateriaUtilizada       Int?         @map("bateria_utilizada")
 
   @@map("vuelos")
 }
 
 model Mantenimiento {
-  id          String   @id @default(uuid())
-  uavId       String   @map("uav_id")
-  uav         UAV      @relation(fields: [uavId], references: [id])
+  id          String              @id @default(uuid())
+  uavId       String              @map("uav_id")
+  uav         UAV                 @relation(fields: [uavId], references: [id])
   fecha       DateTime
   tipo        String
   descripcion String?
+  estado      EstadoMantenimiento @default(pendiente)
 
   @@map("mantenimientos")
+}
+
+enum EstadoVuelo {
+  completado
+  finalizado
+  con_novedad
+}
+
+enum EstadoMantenimiento {
+  pendiente
+  en_proceso
+  completado
 }

@@ -51,6 +51,11 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
+    await prisma.usuario.update({
+      where: { id: usuario.id },
+      data: { ultimoAcceso: new Date() },
+    });
+
     const token = jwt.sign(
       { id: usuario.id, email: usuario.email, rol: usuario.rol },
       process.env.JWT_SECRET,
@@ -67,7 +72,7 @@ router.post('/login', async (req, res) => {
 router.get('/usuarios', authenticate, checkRole('admin'), async (req, res) => {
   try {
     const usuarios = await prisma.usuario.findMany({
-      select: { id: true, email: true, rol: true, activo: true, creadoEn: true },
+      select: { id: true, email: true, rol: true, activo: true, creadoEn: true, ultimoAcceso: true },
       orderBy: { creadoEn: 'desc' },
     });
     res.json(usuarios);
@@ -83,6 +88,14 @@ router.put('/usuarios/:id/estado', authenticate, checkRole('admin'), async (req,
 
     if (typeof activo !== 'boolean') {
       return res.status(400).json({ error: 'El campo activo debe ser true o false' });
+    }
+
+    const usuarioActual = await prisma.usuario.findUnique({ where: { id: req.params.id } });
+    if (usuarioActual?.rol === 'admin' && activo === false) {
+      const totalAdmins = await prisma.usuario.count({ where: { rol: 'admin', activo: true } });
+      if (totalAdmins <= 1) {
+        return res.status(400).json({ error: 'No se puede desactivar: es el único administrador activo del sistema' });
+      }
     }
 
     const usuario = await prisma.usuario.update({
@@ -110,6 +123,14 @@ router.put('/usuarios/:id/rol', authenticate, checkRole('admin'), async (req, re
       return res.status(400).json({ error: 'Rol inválido. Debe ser admin, operador o piloto' });
     }
 
+    const usuarioActual = await prisma.usuario.findUnique({ where: { id: req.params.id } });
+    if (usuarioActual?.rol === 'admin' && rol !== 'admin') {
+      const totalAdmins = await prisma.usuario.count({ where: { rol: 'admin', activo: true } });
+      if (totalAdmins <= 1) {
+        return res.status(400).json({ error: 'No se puede cambiar el rol: es el único administrador activo del sistema' });
+      }
+    }
+
     const usuario = await prisma.usuario.update({
       where: { id: req.params.id },
       data: { rol },
@@ -123,6 +144,37 @@ router.put('/usuarios/:id/rol', authenticate, checkRole('admin'), async (req, re
     }
     console.error(error);
     res.status(500).json({ error: 'Error al actualizar el rol del usuario' });
+  }
+});
+
+router.delete('/usuarios/:id', authenticate, checkRole('admin'), async (req, res) => {
+  try {
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta' });
+    }
+
+    const usuario = await prisma.usuario.findUnique({ where: { id: req.params.id } });
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    if (usuario.rol === 'admin') {
+      const totalAdmins = await prisma.usuario.count({ where: { rol: 'admin', activo: true } });
+      if (totalAdmins <= 1) {
+        return res.status(400).json({ error: 'No se puede eliminar: es el único administrador activo del sistema' });
+      }
+    }
+
+    await prisma.usuario.delete({ where: { id: req.params.id } });
+    res.status(204).send();
+  } catch (error) {
+    if (error.code === 'P2003') {
+      return res.status(409).json({
+        error: 'No se puede eliminar: este usuario tiene UAVs, pilotos o registros creados. Desactívalo en vez de eliminarlo.',
+      });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al eliminar el usuario' });
   }
 });
 

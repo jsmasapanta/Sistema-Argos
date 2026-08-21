@@ -39,3 +39,13 @@ export async function descargarExcel() {
   link.click();
   window.URL.revokeObjectURL(url);
 }
+
+export async function horasPorPilotoYUAV() {
+  const { data } = await apiClient.get('/reportes/horas-piloto-uav');
+  return data;
+}
+
+export async function mantenimientosPorTipoYEstado() {
+  const { data } = await apiClient.get('/reportes/mantenimientos-tipo-estado');
+  return data;
+}

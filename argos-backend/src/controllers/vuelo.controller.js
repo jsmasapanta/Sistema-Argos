@@ -50,12 +50,19 @@ async function misVuelos(req, res) {
 
 async function crearVuelo(req, res) {
   try {
-    const { pilotoId, uavId, fechaInicio, fechaFin, novedades, estado, mision, objetivo, areaSector, rutaCoordenadas, condicionesClimaticas, bateriaUtilizada } = req.body || {};
+    const { pilotoId, uavId, fechaInicio, fechaFin, novedades, estado, mision, objetivo, areaSector, rutaCoordenadas, condicionesClimaticas, bateriaUtilizada, ubicacion, latitud, longitud } = req.body || {};
 
     if (!pilotoId || !uavId || !fechaInicio || !fechaFin) {
       return res.status(400).json({
         error: 'pilotoId, uavId, fechaInicio y fechaFin son requeridos',
       });
+    }
+
+    if (req.user.rol === 'piloto') {
+      const pilotoDelUsuario = await prisma.piloto.findUnique({ where: { usuarioId: req.user.id } });
+      if (!pilotoDelUsuario || pilotoDelUsuario.id !== pilotoId) {
+        return res.status(403).json({ error: 'Solo puedes registrar vuelos a tu propio nombre' });
+      }
     }
 
     const inicio = new Date(fechaInicio);
@@ -100,6 +107,9 @@ async function crearVuelo(req, res) {
           rutaCoordenadas: rutaCoordenadas || undefined,
           condicionesClimaticas: condicionesClimaticas || undefined,
           bateriaUtilizada: bateriaUtilizada ? parseInt(bateriaUtilizada) : undefined,
+          ubicacion: ubicacion || undefined,
+          latitud: latitud ? parseFloat(latitud) : undefined,
+          longitud: longitud ? parseFloat(longitud) : undefined,
         },
       }),
       prisma.uAV.update({
@@ -118,6 +128,19 @@ async function crearVuelo(req, res) {
 async function actualizarVuelo(req, res) {
   try {
     const { novedades, estado, mision, objetivo, areaSector, rutaCoordenadas, condicionesClimaticas, bateriaUtilizada } = req.body || {};
+
+    if (req.user.rol === 'piloto') {
+      const vueloActual = await prisma.vuelo.findUnique({ where: { id: req.params.id }, include: { piloto: true } });
+      if (!vueloActual || vueloActual.piloto.usuarioId !== req.user.id) {
+        return res.status(403).json({ error: 'Solo puedes editar las novedades de tus propios vuelos' });
+      }
+      const vuelo = await prisma.vuelo.update({
+        where: { id: req.params.id },
+        data: { novedades },
+      });
+      return res.json(vuelo);
+    }
+
     const vuelo = await prisma.vuelo.update({
       where: { id: req.params.id },
       data: {
@@ -141,4 +164,27 @@ async function actualizarVuelo(req, res) {
   }
 }
 
-module.exports = { listarVuelos, obtenerVuelo, misVuelos, crearVuelo, actualizarVuelo };
+async function subirFotoVuelo(req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se recibió ninguna imagen' });
+    }
+
+    const fotoUrl = `/uploads/vuelos/${req.file.filename}`;
+
+    const vuelo = await prisma.vuelo.update({
+      where: { id: req.params.id },
+      data: { fotoUrl },
+    });
+
+    res.json(vuelo);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Vuelo no encontrado' });
+    }
+    console.error(error);
+    res.status(500).json({ error: 'Error al subir la foto del vuelo' });
+  }
+}
+
+module.exports = { listarVuelos, obtenerVuelo, misVuelos, crearVuelo, actualizarVuelo, subirFotoVuelo };

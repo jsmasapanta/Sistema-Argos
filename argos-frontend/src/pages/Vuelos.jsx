@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ClipboardList, Plus, Calendar, Clock, BarChart3, AlertTriangle, Eye, MoreVertical, Download } from 'lucide-react';
-import { listarVuelos, crearVuelo, actualizarVuelo } from '../api/vuelos';
+import { listarVuelos, crearVuelo, actualizarVuelo, subirFotoVuelo } from '../api/vuelos';
 import { listarUAVs } from '../api/uavs';
 import { listarPilotos } from '../api/pilotos';
 import Layout from '../components/Layout';
@@ -25,7 +25,11 @@ export default function Vuelos() {
   const { data: pilotos } = useQuery({ queryKey: ['pilotos'], queryFn: listarPilotos });
 
   const mutation = useMutation({
-    mutationFn: crearVuelo,
+    mutationFn: async ({ datos, archivo }) => {
+      const vuelo = await crearVuelo(datos);
+      if (archivo) await subirFotoVuelo(vuelo.id, archivo);
+      return vuelo;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vuelos'] });
       queryClient.invalidateQueries({ queryKey: ['uavs'] });
@@ -143,7 +147,11 @@ export default function Vuelos() {
 
         {mostrarForm && (
           <div className="mb-6 max-w-lg">
-            <FormularioVuelo onGuardar={(datos) => mutation.mutate(datos)} onCancelar={() => setMostrarForm(false)} guardando={mutation.isPending} />
+            <FormularioVuelo
+              onGuardar={(datos, archivo) => mutation.mutate({ datos, archivo })}
+              onCancelar={() => setMostrarForm(false)}
+              guardando={mutation.isPending}
+            />
           </div>
         )}
 

@@ -1,27 +1,21 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { listarPilotos } from '../api/pilotos';
 import { listarUAVs } from '../api/uavs';
 import SelectorMapa from './SelectorMapa';
 
-export default function FormularioVuelo({ onGuardar, onCancelar, guardando }) {
-  const [pilotoId, setPilotoId] = useState('');
+export default function FormularioMiVuelo({ pilotoId, onGuardar, onCancelar, guardando }) {
   const [uavId, setUavId] = useState('');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
-  const [mision, setMision] = useState('');
-  const [objetivo, setObjetivo] = useState('');
   const [ubicacion, setUbicacion] = useState('');
   const [latitud, setLatitud] = useState(null);
   const [longitud, setLongitud] = useState(null);
-  const [condicionesClimaticas, setCondicionesClimaticas] = useState('');
-  const [bateriaUtilizada, setBateriaUtilizada] = useState('');
   const [novedades, setNovedades] = useState('');
   const [archivo, setArchivo] = useState(null);
   const [previewFoto, setPreviewFoto] = useState(null);
 
-  const { data: pilotos } = useQuery({ queryKey: ['pilotos'], queryFn: listarPilotos });
   const { data: uavs } = useQuery({ queryKey: ['uavs'], queryFn: listarUAVs });
+  const uavsDisponibles = uavs?.filter((u) => u.estado === 'operativo') || [];
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -30,8 +24,7 @@ export default function FormularioVuelo({ onGuardar, onCancelar, guardando }) {
       uavId,
       fechaInicio: new Date(fechaInicio).toISOString(),
       fechaFin: new Date(fechaFin).toISOString(),
-      mision, objetivo, condicionesClimaticas, bateriaUtilizada, novedades,
-      ubicacion, latitud, longitud,
+      ubicacion, latitud, longitud, novedades,
     }, archivo);
   }
 
@@ -40,33 +33,17 @@ export default function FormularioVuelo({ onGuardar, onCancelar, guardando }) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-slate-200 p-6 space-y-4">
-      <h3 className="font-display font-semibold text-navy-dark">Registrar vuelo</h3>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={labelClass}>Piloto</label>
-          <select value={pilotoId} onChange={(e) => setPilotoId(e.target.value)} required className={inputClass}>
-            <option value="">Selecciona un piloto</option>
-            {pilotos?.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className={labelClass}>UAV</label>
-          <select value={uavId} onChange={(e) => setUavId(e.target.value)} required className={inputClass}>
-            <option value="">Selecciona un UAV</option>
-            {uavs?.map((u) => <option key={u.id} value={u.id}>{u.codigo} — {u.modelo}</option>)}
-          </select>
-        </div>
-      </div>
+      <h3 className="font-display font-semibold text-navy-dark">Registrar mi vuelo</h3>
 
       <div>
-        <label className={labelClass}>Misión</label>
-        <input type="text" value={mision} onChange={(e) => setMision(e.target.value)} className={inputClass} placeholder="Reconocimiento de zona" />
-      </div>
-
-      <div>
-        <label className={labelClass}>Objetivo</label>
-        <textarea value={objetivo} onChange={(e) => setObjetivo(e.target.value)} rows={2} className={inputClass} placeholder="Levantamiento fotogramétrico del sector..." />
+        <label className={labelClass}>UAV utilizado</label>
+        <select value={uavId} onChange={(e) => setUavId(e.target.value)} required className={inputClass}>
+          <option value="">Selecciona un UAV operativo</option>
+          {uavsDisponibles.map((u) => <option key={u.id} value={u.id}>{u.codigo} — {u.modelo}</option>)}
+        </select>
+        {uavsDisponibles.length === 0 && (
+          <p className="text-xs text-warning mt-1">No hay UAVs operativos disponibles en este momento.</p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -90,19 +67,8 @@ export default function FormularioVuelo({ onGuardar, onCancelar, guardando }) {
         <SelectorMapa latitud={latitud} longitud={longitud} onCambiar={(lat, lng) => { setLatitud(lat); setLongitud(lng); }} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={labelClass}>Batería utilizada (%)</label>
-          <input type="number" min="0" max="100" value={bateriaUtilizada} onChange={(e) => setBateriaUtilizada(e.target.value)} className={inputClass} placeholder="78" />
-        </div>
-        <div>
-          <label className={labelClass}>Condiciones climáticas</label>
-          <input type="text" value={condicionesClimaticas} onChange={(e) => setCondicionesClimaticas(e.target.value)} className={inputClass} placeholder="Nublado, 24°C" />
-        </div>
-      </div>
-
       <div>
-        <label className={labelClass}>Novedades / Observaciones</label>
+        <label className={labelClass}>Novedades (opcional)</label>
         <textarea value={novedades} onChange={(e) => setNovedades(e.target.value)} rows={2} className={inputClass} placeholder="Sin novedades" />
       </div>
 

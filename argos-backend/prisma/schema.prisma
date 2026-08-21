@@ -96,6 +96,10 @@ model Vuelo {
   rutaCoordenadas        String?      @map("ruta_coordenadas")
   condicionesClimaticas  String?      @map("condiciones_climaticas")
   bateriaUtilizada       Int?         @map("bateria_utilizada")
+  ubicacion   String?
+  latitud     Float?
+  longitud    Float?
+  fotoUrl     String? @map("foto_url")
 
   @@map("vuelos")
 }
